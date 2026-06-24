@@ -1,0 +1,159 @@
+:root {
+  --bg: #f4efe5;
+  --card: #fff9ef;
+  --ink: #18222f;
+  --muted: #5d6a75;
+  --line: #d8cdb6;
+  --accent: #0f6d73;
+  --accent-2: #d97138;
+  --danger: #b42318;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  font-family: "IBM Plex Sans", "Segoe UI", sans-serif;
+  color: var(--ink);
+  background:
+    radial-gradient(circle at 12% 18%, #ead6b8 0%, transparent 30%),
+    radial-gradient(circle at 88% 2%, #cbe7df 0%, transparent 38%),
+    var(--bg);
+}
+
+.layout {
+  width: min(1400px, 96vw);
+  margin: 0 auto;
+  padding: 1.25rem 0 2rem;
+}
+
+.hero h1 {
+  font-size: clamp(1.8rem, 4vw, 2.8rem);
+  margin: 0;
+}
+
+.hero p {
+  margin-top: 0.5rem;
+  color: var(--muted);
+}
+
+.panel {
+  background: color-mix(in srgb, var(--card) 88%, white);
+  border: 1px solid var(--line);
+  border-radius: 14px;
+  padding: 1rem;
+  margin-bottom: 1rem;
+}
+
+.grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 0.65rem;
+}
+
+.grid label {
+  display: flex;
+  flex-direction: column;
+  font-size: 0.82rem;
+  gap: 0.25rem;
+}
+
+.span-2 {
+  grid-column: span 2;
+}
+
+input,
+select,
+textarea,
+button {
+  font: inherit;
+}
+
+input,
+select,
+textarea {
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  padding: 0.45rem 0.5rem;
+  background: #fff;
+}
+
+.actions,
+.filters {
+  display: flex;
+  gap: 0.6rem;
+  margin-top: 0.75rem;
+  flex-wrap: wrap;
+}
+
+button {
+  border: 0;
+  border-radius: 10px;
+  padding: 0.5rem 0.75rem;
+  background: var(--accent);
+  color: #fff;
+  cursor: pointer;
+}
+
+button.secondary {
+  background: #7a8a96;
+}
+
+button.danger {
+  background: var(--danger);
+}
+
+.table-wrap {
+  overflow: auto;
+  border: 1px solid var(--line);
+  border-radius: 10px;
+}
+
+table {
+  width: 100%;
+  border-collapse: collapse;
+  min-width: 1400px;
+}
+
+thead th {
+  position: sticky;
+  top: 0;
+  background: #efe5d3;
+  font-size: 0.78rem;
+  text-align: left;
+}
+
+th,
+td {
+  border-bottom: 1px solid var(--line);
+  padding: 0.45rem;
+  font-size: 0.78rem;
+  vertical-align: top;
+}
+
+td form {
+  display: contents;
+}
+
+.inline-actions {
+  display: flex;
+  gap: 0.4rem;
+}
+
+.error-box {
+  color: var(--danger);
+  margin-top: 0.5rem;
+  font-size: 0.85rem;
+}
+
+@media (max-width: 900px) {
+  .grid {
+    grid-template-columns: 1fr;
+  }
+
+  .span-2 {
+    grid-column: span 1;
+  }
+}
