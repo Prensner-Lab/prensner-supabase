@@ -28,11 +28,28 @@
     }
   }
 
+  function getAnonKey() {
+    if (typeof window === "undefined") {
+      return "";
+    }
+    return (window.SUPABASE_ANON_KEY || "").trim();
+  }
+
+  function addSupabaseHeaders(evt) {
+    const anonKey = getAnonKey();
+    if (!anonKey || !evt || !evt.detail || !evt.detail.headers) {
+      return;
+    }
+    evt.detail.headers.Authorization = "Bearer " + anonKey;
+    evt.detail.headers.apikey = anonKey;
+  }
+
   document.addEventListener("DOMContentLoaded", function () {
     wireAttributes(document);
     if (window.htmx) {
       window.htmx.process(document.body);
     }
+    document.body.addEventListener("htmx:configRequest", addSupabaseHeaders);
     document.body.addEventListener("htmx:afterSwap", function (evt) {
       if (evt.target) {
         wireAttributes(evt.target);

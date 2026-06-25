@@ -1,10 +1,10 @@
-alter table public.sequencing_runs enable row level security;
+alter table public.samplesheet_entries enable row level security;
 
 -- Temporary MVP policy for internal anonymous usage.
 -- Replace with authenticated user/team-scoped policies before broader deployment.
-drop policy if exists sequencing_runs_anon_all on public.sequencing_runs;
-create policy sequencing_runs_anon_all
-on public.sequencing_runs
+drop policy if exists samplesheet_entries_anon_all on public.samplesheet_entries;
+create policy samplesheet_entries_anon_all
+on public.samplesheet_entries
 for all
 to anon
 using (true)

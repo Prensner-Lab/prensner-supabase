@@ -37,7 +37,7 @@ Deno.serve(async (req) => {
   }
 
   const { data, error } = await db
-    .from("sequencing_runs")
+    .from("samplesheet_entries")
     .update(payload)
     .eq("id", id)
     .select("*")

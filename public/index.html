@@ -7,7 +7,10 @@
     <link rel="stylesheet" href="./styles.css" />
     <script>
       window.FUNCTIONS_BASE =
-        window.FUNCTIONS_BASE || "https://kihammzyzkzwapybskjh.supabase.co/functions/v1";
+        window.FUNCTIONS_BASE || "http://127.0.0.1:54321/functions/v1";
+      window.SUPABASE_ANON_KEY =
+        window.SUPABASE_ANON_KEY ||
+        "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZS1kZW1vIiwicm9sZSI6ImFub24iLCJleHAiOjE5ODM4MTI5OTZ9.CRXP1A7WOeoJeXxjNni43kdQwgnWNReilDMblYTn_I0";
     </script>
     <script src="./app.js"></script>
     <script src="https://unpkg.com/htmx.org@1.9.12"></script>
@@ -23,8 +26,8 @@
         <h2>New Entry</h2>
         <form
           id="create-form"
-          data-hx-post="/create-run"
-          data-hx-target="#runs-body"
+          data-hx-post="/create-samplesheet-entry"
+          data-hx-target="#samplesheet-entries-body"
           data-hx-swap="afterbegin"
         >
           <div class="grid">
@@ -81,8 +84,8 @@
         <h2>Samples</h2>
         <form
           id="filter-form"
-          data-hx-get="/list-runs"
-          data-hx-target="#runs-body"
+          data-hx-get="/list-samplesheet-entries"
+          data-hx-target="#samplesheet-entries-body"
           data-hx-swap="innerHTML"
           data-hx-trigger="keyup changed delay:350ms from:#search, change from:#data_type_filter, change from:#species_filter"
         >
@@ -90,7 +93,7 @@
             <label>Search <input id="search" name="q" placeholder="run_id, smart_id, description" /></label>
             <label>data_type <input id="data_type_filter" name="data_type" /></label>
             <label>species <input id="species_filter" name="species" /></label>
-            <button type="button" data-hx-get="/list-runs" data-hx-target="#runs-body" data-hx-swap="innerHTML">Reset</button>
+            <button type="button" data-hx-get="/list-samplesheet-entries" data-hx-target="#samplesheet-entries-body" data-hx-swap="innerHTML">Reset</button>
           </div>
         </form>
 
@@ -118,7 +121,7 @@
                 <th>actions</th>
               </tr>
             </thead>
-            <tbody id="runs-body" data-hx-get="/list-runs" data-hx-trigger="load" data-hx-swap="innerHTML">
+            <tbody id="samplesheet-entries-body" data-hx-get="/list-samplesheet-entries" data-hx-trigger="load" data-hx-swap="innerHTML">
               <tr>
                 <td colspan="18">Loading...</td>
               </tr>

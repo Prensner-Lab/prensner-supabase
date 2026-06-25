@@ -29,7 +29,7 @@ Deno.serve(async (req) => {
     });
   }
 
-  const { data, error } = await db.from("sequencing_runs").insert(payload).select("*").single();
+  const { data, error } = await db.from("samplesheet_entries").insert(payload).select("*").single();
 
   if (error || !data) {
     return html(renderCreateErrors([error?.message || "Insert failed"]), 400, {

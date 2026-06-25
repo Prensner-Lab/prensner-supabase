@@ -17,7 +17,7 @@ Deno.serve(async (req) => {
     return html("Missing id", 400);
   }
 
-  const { error } = await db.from("sequencing_runs").delete().eq("id", id);
+  const { error } = await db.from("samplesheet_entries").delete().eq("id", id);
 
   if (error) {
     return html(`Delete failed: ${error.message}`, 400);

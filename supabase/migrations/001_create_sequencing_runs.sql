@@ -21,10 +21,9 @@ create table if not exists public.samplesheet_entries (
   description text,
   created_at timestamptz not null default now(),
   updated_at timestamptz not null default now(),
-  constraint samplesheet_entries_read_end_check check (read_end is null or read_end in (1, 2)),
   constraint samplesheet_entries_toc_check check (
     test_or_control is null or test_or_control in ('test', 'control')
-  )
+  ),
   constraint samplesheet_entries_read_end_check check (
     read_end is null or read_end in ('R1', 'R2')
   )

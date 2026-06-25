@@ -13,7 +13,7 @@ Deno.serve(async (req) => {
   const limit = Math.min(Number(url.searchParams.get("limit") || 50), 200);
 
   let query = db
-    .from("sequencing_runs")
+    .from("samplesheet_entries")
     .select("*")
     .order("created_at", { ascending: false })
     .limit(limit);
