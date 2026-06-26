@@ -21,10 +21,10 @@
   }
 
   function onResponseError() {
-    const target = document.getElementById("create-errors");
+    const target = document.getElementById("main-content");
     if (target) {
       target.innerHTML =
-        "<div class=\"error-box\">Request failed. Check Supabase function logs.</div>";
+        "<div class=\"container\"><h1>Request failed</h1><p>Check Supabase function logs.</p></div>";
     }
   }
 
@@ -49,6 +49,7 @@
     if (window.htmx) {
       window.htmx.process(document.body);
     }
+
     document.body.addEventListener("htmx:configRequest", addSupabaseHeaders);
     document.body.addEventListener("htmx:afterSwap", function (evt) {
       if (evt.target) {

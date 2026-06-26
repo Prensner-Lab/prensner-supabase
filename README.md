@@ -1,10 +1,25 @@
 # HTMX + Supabase Data Entry MVP
 
-Single-page static HTMX app for browsing, creating, updating, deleting, and filtering sequencing run metadata. Supabase Edge Functions return HTML fragments for HTMX swaps.
+Single-page static HTMX app for browsing, creating, updating, deleting, and filtering sequencing run metadata, plus additive samplesheet containers. Supabase Edge Functions return HTML fragments for HTMX swaps.
 
 ## Data fields
 
+Samplesheet metadata (container):
+
+- pi_name
+- date
+- submitter_name
+- submitter_email
+- project_id
+- project_title
+- experiment_type
+- project_description
+- filename
+
+Samplesheet entry fields:
+
 - run_id
+- samplesheet_id (required link to `samplesheets.id`)
 - smart_id
 - data_type
 - species
@@ -28,6 +43,11 @@ Single-page static HTMX app for browsing, creating, updating, deleting, and filt
 - `supabase/migrations/` DB schema and RLS policy migrations
 - `supabase/functions/` HTML fragment edge endpoints
 
+## Database objects
+
+- `public.samplesheets` table stores top-level samplesheet metadata.
+- `public.samplesheet_entries` remains in place and now includes required `samplesheet_id`.
+
 ## Local setup
 
 1. Install Supabase CLI.
@@ -50,11 +70,11 @@ Deploy locally after editing:
 
 Endpoints:
 
-- `list-runs`
+- `list-samplesheets`
+- `get-samplesheet`
 - `row-fragment`
-- `create-run`
-- `update-run`
-- `delete-run`
+- `update-samplesheet-entry`
+- `delete-samplesheet-entry`
 
 ## Production notes
 

@@ -1,0 +1,40 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Prensner Lab</title>
+    <link rel="stylesheet" href="./styles.css" />
+    <script>
+      window.FUNCTIONS_BASE =
+        window.FUNCTIONS_BASE || "http://127.0.0.1:54321/functions/v1";
+      window.SUPABASE_ANON_KEY =
+        window.SUPABASE_ANON_KEY ||
+        "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZS1kZW1vIiwicm9sZSI6ImFub24iLCJleHAiOjE5ODM4MTI5OTZ9.CRXP1A7WOeoJeXxjNni43kdQwgnWNReilDMblYTn_I0";
+    </script>
+    <script src="./app.js"></script>
+    <script src="https://unpkg.com/htmx.org@1.9.12"></script>
+</head>
+<body>
+
+    <nav>
+        <h2>Samplesheets</h2>
+        <ul
+          id="samplesheet-nav"
+          data-hx-get="/list-samplesheets"
+          data-hx-trigger="load"
+          data-hx-swap="innerHTML"
+        >
+            <li>Loading...</li>
+        </ul>
+    </nav>
+
+    <main id="main-content">
+        <div class="container">
+            <h1>Welcome to the lab!</h1>
+            <p>Select a samplesheet in the left nav to load metadata and entries.</p>
+        </div>
+    </main>
+
+</body>
+</html>
