@@ -29,6 +29,60 @@ nav h2 {
     border-bottom: 1px solid #334155;
 }
 
+.auth-panel {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    padding: 12px;
+    border-radius: 8px;
+    background: #0f172a;
+    border: 1px solid #334155;
+}
+
+.auth-panel h3 {
+    font-size: 1rem;
+    margin-bottom: 2px;
+}
+
+.auth-panel form {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+}
+
+.auth-panel label {
+    font-size: 0.8rem;
+    color: #cbd5e1;
+}
+
+.auth-panel input {
+    border: 1px solid #475569;
+    border-radius: 6px;
+    padding: 8px;
+    background: #1e293b;
+    color: #fff;
+}
+
+.auth-panel button {
+    border: 0;
+    border-radius: 6px;
+    padding: 10px;
+    background: #38bdf8;
+    color: #082f49;
+    font-weight: 700;
+    cursor: pointer;
+}
+
+.auth-panel button.secondary {
+    background: #475569;
+    color: #f8fafc;
+}
+
+#auth-status {
+    font-size: 0.8rem;
+    color: #94a3b8;
+}
+
 nav ul {
     list-style: none;
     display: flex;

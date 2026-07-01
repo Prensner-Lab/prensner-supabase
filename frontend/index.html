@@ -1,0 +1,55 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Prensner Lab</title>
+    <link rel="stylesheet" href="./styles.css" />
+    <script>
+      window.FUNCTIONS_BASE =
+        window.FUNCTIONS_BASE || "http://127.0.0.1:54321/functions/v1";
+      window.SUPABASE_URL =
+        window.SUPABASE_URL || "http://127.0.0.1:54321";
+      window.SUPABASE_PUBLISHABLE_KEY =
+        window.SUPABASE_PUBLISHABLE_KEY ||
+        "sb_publishable_ACJWlzQHlZjBrEguHvfOxg_3BJgxAaH";
+    </script>
+        <script src="https://unpkg.com/@supabase/supabase-js@2"></script>
+    <script src="./app.js"></script>
+    <script src="https://unpkg.com/htmx.org@1.9.12"></script>
+</head>
+<body>
+
+    <nav>
+        <section class="auth-panel">
+            <h3>Account</h3>
+            <form id="auth-form">
+                <label for="auth-email">Email</label>
+                <input id="auth-email" name="email" type="email" required />
+                <label for="auth-password">Password</label>
+                <input id="auth-password" name="password" type="password" required />
+                <button type="submit">Sign in</button>
+            </form>
+            <button id="logout-btn" type="button" class="secondary" hidden>Sign out</button>
+            <p id="auth-status">Sign in with your invited account.</p>
+        </section>
+        <h2>Samplesheets</h2>
+        <ul
+          id="samplesheet-nav"
+          data-hx-get="/list-samplesheets"
+                    data-hx-trigger="refresh-samplesheets from:body"
+          data-hx-swap="innerHTML"
+        >
+        <li>Sign in to load samplesheets.</li>
+        </ul>
+    </nav>
+
+    <main id="main-content">
+        <div class="container">
+            <h1>Welcome to the lab!</h1>
+            <p>Select a samplesheet in the left nav to load metadata and entries.</p>
+        </div>
+    </main>
+
+</body>
+</html>

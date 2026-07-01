@@ -1,7 +1,7 @@
-.PHONY: frontend
+.PHONY: frontend functions
 
 functions:
-	supabase functions serve --no-verify-jwt
+	supabase functions serve
 
 frontend:
-	cd app && python3 -m http.server 8080
+	cd frontend && python3 -m http.server 8080

@@ -2,6 +2,7 @@ import { createClient } from "npm:@supabase/supabase-js@2";
 
 export type RunRow = {
   id: string;
+  created_by: string | null;
   samplesheet_id: string;
   run_id: string;
   smart_id: string | null;
@@ -24,6 +25,7 @@ export type RunRow = {
 
 export type SamplesheetRow = {
   id: string;
+  created_by: string | null;
   pi_name: string | null;
   date: string | null;
   submitter_name: string | null;
@@ -38,19 +40,19 @@ export type SamplesheetRow = {
 };
 
 const url = Deno.env.get("SUPABASE_URL") || "";
-const key = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") || "";
+const key = Deno.env.get("SUPABASE_ANON_KEY") || "";
 
 if (!url || !key) {
-  throw new Error("Missing SUPABASE_URL or SUPABASE_SERVICE_ROLE_KEY secret.");
+  throw new Error("Missing SUPABASE_URL or SUPABASE_ANON_KEY secret.");
 }
 
-export const db = createClient(url, key, {
-  auth: { persistSession: false }
-});
+type AuthResult =
+  | { ok: true; db: ReturnType<typeof createClient>; userId: string }
+  | { ok: false; response: Response };
 
 export const corsHeaders: Record<string, string> = {
   "Access-Control-Allow-Origin": "*",
-  "Access-Control-Allow-Methods": "GET,POST,DELETE,OPTIONS",
+  "Access-Control-Allow-Methods": "GET,POST,OPTIONS",
   "Access-Control-Allow-Headers":
     "authorization, x-client-info, apikey, content-type, hx-request, hx-current-url, hx-target, hx-trigger, hx-trigger-name",
   "Cache-Control": "no-store"
@@ -74,6 +76,45 @@ export function html(body: string, status = 200, extraHeaders: Record<string, st
   });
 }
 
+function authHeader(req: Request): string {
+  return req.headers.get("Authorization") || req.headers.get("authorization") || "";
+}
+
+function extractBearerToken(req: Request): string {
+  const value = authHeader(req).trim();
+  if (!value.toLowerCase().startsWith("bearer ")) {
+    return "";
+  }
+  return value.slice(7).trim();
+}
+
+export async function requireAuth(req: Request): Promise<AuthResult> {
+  const token = extractBearerToken(req);
+  if (!token) {
+    return { ok: false, response: html("Unauthorized", 401) };
+  }
+
+  const db = createClient(url, key, {
+    auth: {
+      persistSession: false,
+      autoRefreshToken: false,
+      detectSessionInUrl: false
+    },
+    global: {
+      headers: {
+        Authorization: `Bearer ${token}`
+      }
+    }
+  });
+
+  const { data, error } = await db.auth.getUser(token);
+  if (error || !data?.user?.id) {
+    return { ok: false, response: html("Unauthorized", 401) };
+  }
+
+  return { ok: true, db, userId: data.user.id };
+}
+
 export function esc(value: unknown): string {
   const raw = value == null ? "" : String(value);
   return raw
@@ -94,20 +135,11 @@ function toCssClass(dataType: string): string {
 
 export function renderViewRow(row: RunRow) {
   const dtClass = row.data_type ? toCssClass(row.data_type) : "dt-empty";
+
   return `<tr id="run-${esc(row.id)}" class="data-row ${dtClass}">
     ${cell(row.run_id)}
     ${cell(row.smart_id)}
     ${cell(row.source_id)}
-    <td>
-      <button
-        class="danger"
-        data-hx-delete="/delete-samplesheet-entry?id=${esc(row.id)}"
-        data-hx-confirm="Delete run ${esc(row.run_id)}?"
-        data-hx-target="closest tr"
-        data-hx-swap="outerHTML"
-        type="button"
-      >Delete</button>
-    </td>
   </tr>`;
 }
 
@@ -182,7 +214,6 @@ export function renderSamplesheetDetail(row: SamplesheetRow, entriesHtml: string
             <th>run_id</th>
             <th>smart_id</th>
             <th>source_id</th>
-            <th>actions</th>
           </tr>
         </thead>
         <tbody>${entriesHtml}</tbody>

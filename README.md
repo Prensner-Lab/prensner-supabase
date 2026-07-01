@@ -1,6 +1,6 @@
 # HTMX + Supabase Data Entry MVP
 
-Single-page static HTMX app for browsing, creating, updating, deleting, and filtering sequencing run metadata, plus additive samplesheet containers. Supabase Edge Functions return HTML fragments for HTMX swaps.
+Single-page static HTMX app for browsing, creating, updating, and filtering sequencing run metadata, plus additive samplesheet containers. Supabase Edge Functions return HTML fragments for HTMX swaps.
 
 ## Data fields
 
@@ -74,10 +74,17 @@ Endpoints:
 - `get-samplesheet`
 - `row-fragment`
 - `update-samplesheet-entry`
-- `delete-samplesheet-entry`
 
 ## Production notes
 
-- Current policy allows anonymous all-access for MVP internal use only.
-- Replace with authenticated policies before wider release.
+- Auth model is invite-only using Supabase Auth. Self-signup is disabled.
+- All authenticated users can read all records.
+- Updates are owner-locked by `created_by = auth.uid()`.
 - Keep function responses as `text/html` for HTMX compatibility.
+
+## Auth rollout notes
+
+- Run edge functions with JWT verification enabled:
+   - `supabase functions serve`
+- To create new users, use Supabase invite flow from dashboard or admin APIs.
+- Existing seed rows with null ownership are read-only to normal users by design.

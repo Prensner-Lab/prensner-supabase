@@ -1,13 +1,14 @@
 import {
-  db,
   handleOptions,
   html,
+  requireAuth,
+  type RunRow,
   renderSamplesheetDetail,
   renderViewRow,
   type SamplesheetRow
 } from "../_shared/lib.ts";
 
-Deno.serve(async (req) => {
+Deno.serve(async (req: Request) => {
   const optionsResponse = handleOptions(req);
   if (optionsResponse) {
     return optionsResponse;
@@ -17,6 +18,11 @@ Deno.serve(async (req) => {
     return html("Method not allowed", 405);
   }
 
+  const auth = await requireAuth(req);
+  if (!auth.ok) {
+    return auth.response;
+  }
+
   const url = new URL(req.url);
   const id = url.searchParams.get("id")?.trim();
 
@@ -24,7 +30,7 @@ Deno.serve(async (req) => {
     return html("<div class=\"container\"><h1>Samplesheet</h1><p>Missing samplesheet id.</p></div>", 400);
   }
 
-  const { data: samplesheet, error: sheetError } = await db
+  const { data: samplesheet, error: sheetError } = await auth.db
     .from("samplesheets")
     .select("*")
     .eq("id", id)
@@ -34,7 +40,7 @@ Deno.serve(async (req) => {
     return html("<div class=\"container\"><h1>Samplesheet</h1><p>Samplesheet not found.</p></div>", 404);
   }
 
-  const { data: entries, error: entriesError } = await db
+  const { data: entries, error: entriesError } = await auth.db
     .from("samplesheet_entries")
     .select("*")
     .eq("samplesheet_id", id)
@@ -49,9 +55,11 @@ Deno.serve(async (req) => {
     (entries || []).map((e: { data_type: string | null }) => e.data_type).filter((dt: string | null): dt is string => dt != null)
   )];
 
-  const rowsHtml = !entries || entries.length === 0
-    ? "<tr><td colspan=\"4\">No entries found for this samplesheet.</td></tr>"
-    : entries.map((row) => renderViewRow(row)).join("");
+  const entryRows = (entries || []) as RunRow[];
+
+  const rowsHtml = entryRows.length === 0
+    ? "<tr><td colspan=\"3\">No entries found for this samplesheet.</td></tr>"
+    : entryRows.map((row: RunRow) => renderViewRow(row)).join("");
 
   return html(renderSamplesheetDetail(samplesheet as SamplesheetRow, rowsHtml, dataTypes));
 });
