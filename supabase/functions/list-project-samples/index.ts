@@ -24,7 +24,7 @@ Deno.serve(async (req: Request) => {
   }
 
   const url = new URL(req.url);
-  const projectFilter = (url.searchParams.get("project") || "all").trim();
+  const projectFilter = (url.searchParams.get("project_id") || "all").trim();
 
   let query = auth.db
     .from("project_samples_latest_status")
@@ -33,7 +33,7 @@ Deno.serve(async (req: Request) => {
     .order("sample_name", { ascending: true });
 
   if (projectFilter && projectFilter !== "all") {
-    query = query.eq("project_code", projectFilter);
+    query = query.eq("project_id", projectFilter);
   }
 
   const { data, error } = await query;
@@ -50,7 +50,7 @@ Deno.serve(async (req: Request) => {
   if (rows.length === 0) {
     const viewTitle = projectFilter === "all" || !projectFilter
       ? "All Samples"
-      : `Project ${projectFilter}`;
+      : "Selected Project";
 
     return html(
       `<div class="container"><h1>${esc(viewTitle)}</h1><p>No samples found for this view.</p></div>`

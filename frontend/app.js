@@ -4,7 +4,9 @@
   const base = (window.FUNCTIONS_BASE || "").replace(/\/$/, "");
   const supabaseUrl = (window.SUPABASE_URL || "").trim();
   const publishableKey = (window.SUPABASE_PUBLISHABLE_KEY || "").trim();
-  let lastProjectSamplesPath = expand("/list-project-samples?project=all");
+  const recentCap = 12;
+  let lastProjectSamplesPath = expand("/list-project-samples?project_id=all");
+  let recentItems = [];
   let accessToken = "";
   let client = null;
 
@@ -60,6 +62,26 @@
     });
   }
 
+  function escapeHtml(value) {
+    const raw = value == null ? "" : String(value);
+    return raw
+      .replaceAll("&", "&amp;")
+      .replaceAll("<", "&lt;")
+      .replaceAll(">", "&gt;")
+      .replaceAll('"', "&quot;")
+      .replaceAll("'", "&#39;");
+  }
+
+  function loadDashboard() {
+    if (!window.htmx) {
+      return;
+    }
+    window.htmx.ajax("GET", expand("/get-dashboard"), {
+      target: "#main-content",
+      swap: "innerHTML"
+    });
+  }
+
   function setStatus(message) {
     const status = document.getElementById("auth-status");
     if (status) {
@@ -67,49 +89,107 @@
     }
   }
 
-  function resetNav() {
-    const samplesheetNav = document.getElementById("samplesheet-nav");
-    if (samplesheetNav) {
-      samplesheetNav.innerHTML = "<li>Sign in to load samplesheets.</li>";
+  function renderRecentNav() {
+    const recentNav = document.getElementById("recent-nav");
+    if (!recentNav) {
+      return;
     }
 
-    const projectNav = document.getElementById("project-nav");
-    if (projectNav) {
-      projectNav.innerHTML = "<li>Sign in to load projects.</li>";
+    if (recentItems.length === 0) {
+      recentNav.innerHTML = "<li>No recent items yet.</li>";
+      return;
+    }
+
+    recentNav.innerHTML = recentItems.map((item, index) => {
+      const activeClass = index === 0 ? "active" : "";
+      return `<li>
+        <a
+          href="#"
+          class="${activeClass}"
+          data-hx-get="${escapeHtml(item.path)}"
+          data-hx-target="#main-content"
+          data-hx-swap="innerHTML"
+          data-recent-key="${escapeHtml(item.key)}"
+          data-recent-type="${escapeHtml(item.type)}"
+          data-recent-label="${escapeHtml(item.label)}"
+          data-recent-path="${escapeHtml(item.path)}"
+        >${escapeHtml(item.label)}</a>
+      </li>`;
+    }).join("");
+
+    wireAttributes(recentNav);
+    if (window.htmx) {
+      window.htmx.process(recentNav);
     }
   }
 
-  function signedOutMessage() {
-    if (document.getElementById("project-nav")) {
-      return "<div class=\"container\"><h1>Project Sample Tracking</h1><p>Sign in to view project samples.</p></div>";
+  function addRecentItem(item) {
+    if (!item || !item.key || !item.path || !item.label) {
+      return;
     }
-    return "<div class=\"container\"><h1>Welcome to the lab!</h1><p>Sign in to view samplesheets.</p></div>";
+
+    recentItems = recentItems.filter((existing) => existing.key !== item.key);
+    recentItems.unshift(item);
+    if (recentItems.length > recentCap) {
+      recentItems = recentItems.slice(0, recentCap);
+    }
+
+    renderRecentNav();
+  }
+
+  function maybeTrackRecentFromElement(el) {
+    if (!(el instanceof HTMLElement)) {
+      return;
+    }
+
+    const key = (el.getAttribute("data-recent-key") || "").trim();
+    const label = (el.getAttribute("data-recent-label") || "").trim();
+    const path = (el.getAttribute("data-recent-path") || el.getAttribute("data-hx-get") || "").trim();
+    const type = (el.getAttribute("data-recent-type") || "item").trim();
+    if (!key || !label || !path) {
+      return;
+    }
+
+    addRecentItem({ key, label, path, type });
+  }
+
+  function signedOutMessage() {
+    return "<div class=\"container\"><h1>Welcome to the lab!</h1><p>Sign in to get started.</p></div>";
   }
 
   function updateAuthUi(user) {
     const form = document.getElementById("auth-form");
     const logout = document.getElementById("logout-btn");
-    if (!form || !logout) {
+    const dashboardBtn = document.getElementById("dashboard-btn");
+    const recentSection = document.getElementById("recent-section");
+    if (!form || !logout || !dashboardBtn || !recentSection) {
       return;
     }
 
     if (user) {
       form.hidden = true;
       logout.hidden = false;
+      dashboardBtn.hidden = false;
+      recentSection.hidden = false;
       setStatus("Signed in as " + user.email);
-      if (window.htmx) {
-        window.htmx.trigger(document.body, "refresh-samplesheets");
-        window.htmx.trigger(document.body, "refresh-projects");
-      }
+      renderRecentNav();
+      loadDashboard();
     } else {
       form.hidden = false;
       logout.hidden = true;
-      setStatus("Sign in with your invited account.");
-      resetNav();
+      dashboardBtn.hidden = true;
+      recentSection.hidden = true;
+      setStatus("Contact the Prensner lab to be invited to make an account.");
+      recentItems = [];
+      const recentNav = document.getElementById("recent-nav");
+      if (recentNav) {
+        recentNav.innerHTML = "";
+      }
       const main = document.getElementById("main-content");
       if (main) {
         main.innerHTML = signedOutMessage();
       }
+      closeModal();
     }
   }
 
@@ -166,6 +246,9 @@
       if (path.includes("/list-project-samples")) {
         lastProjectSamplesPath = path;
       }
+
+      const elt = evt && evt.detail ? evt.detail.elt : null;
+      maybeTrackRecentFromElement(elt);
     });
 
     document.body.addEventListener("htmx:afterRequest", function (evt) {
@@ -200,6 +283,8 @@
         setStatus("Session expired. Sign in again.");
       } else if (status === 403) {
         setStatus("You can only modify your own records.");
+      } else if (status === 404) {
+        setStatus("Resource not found.");
       }
       onResponseError();
     });
@@ -242,6 +327,13 @@
         await client.auth.signOut();
         accessToken = "";
         updateAuthUi(null);
+      });
+    }
+
+    const dashboardBtn = document.getElementById("dashboard-btn");
+    if (dashboardBtn) {
+      dashboardBtn.addEventListener("click", function () {
+        loadDashboard();
       });
     }
 

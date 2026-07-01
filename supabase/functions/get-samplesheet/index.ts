@@ -1,6 +1,7 @@
 import {
   handleOptions,
   html,
+  isInternalUser,
   requireAuth,
   type RunRow,
   renderSamplesheetDetail,
@@ -21,6 +22,11 @@ Deno.serve(async (req: Request) => {
   const auth = await requireAuth(req);
   if (!auth.ok) {
     return auth.response;
+  }
+
+  const internal = await isInternalUser(auth.db);
+  if (!internal) {
+    return html("<div class=\"container\"><h1>Samplesheet</h1><p>Samplesheet not found.</p></div>", 404);
   }
 
   const url = new URL(req.url);

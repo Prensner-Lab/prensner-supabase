@@ -1,6 +1,6 @@
 # HTMX + Supabase Data Entry MVP
 
-Static HTMX frontend for browsing sequencing metadata and technician-facing project sample tracking. Supabase Edge Functions return HTML fragments for HTMX swaps.
+Static HTMX frontend for unified dashboard access to sequencing metadata and technician-facing project sample tracking. Supabase Edge Functions return HTML fragments for HTMX swaps.
 
 ## Data fields
 
@@ -46,7 +46,7 @@ Project sample tracking fields:
 
 ## Structure
 
-- `frontend/` static site (`index.html`, `projects.html`, `styles.css`, `app.js`)
+- `frontend/` static site (`index.html`, `styles.css`, `app.js`)
 - `supabase/migrations/` DB schema and RLS policy migrations
 - `supabase/functions/` HTML fragment edge endpoints
 
@@ -71,8 +71,7 @@ Project sample tracking fields:
 5. Serve static site from `frontend/` (example):
    - `cd frontend && python3 -m http.server 8080`
 6. Open:
-   - `http://127.0.0.1:8080/index.html` for samplesheets
-   - `http://127.0.0.1:8080/projects.html` for project sample tracking
+   - `http://127.0.0.1:8080/index.html` for the dashboard
 
 ## Edge functions
 
@@ -88,29 +87,32 @@ Endpoints:
 - `get-samplesheet`
 - `list-projects`
 - `list-project-samples`
+- `get-dashboard`
 - `get-sample-status-modal`
 - `add-sample-status-update`
 
 ## Production notes
 
 - Auth model is invite-only using Supabase Auth. Self-signup is disabled.
-- All authenticated users can read all records.
-- Updates are owner-locked by `created_by = auth.uid()`.
+- Internal users can read all projects, samples, and samplesheets.
+- External users are read-only and can see only granted projects and their samples.
+- Samplesheets are internal-only. External samplesheet list requests return empty results and samplesheet detail requests return 404.
+- Status updates remain internal-only for writes.
 - Keep function responses as `text/html` for HTMX compatibility.
 
-## Project tracking page behavior
+## Unified dashboard behavior
 
-- Left nav lists `All` plus each project.
-- Selecting a project shows only that cohort's samples.
-- Selecting `All` shows samples across all projects.
-- Each sample row displays the sample name and latest status.
-- Status history already exists in `sample_status_updates` and can power a future pop-up/timeline view.
+- Successful auth auto-loads dashboard cards.
+- Dashboard cards include projects for all signed-in users (subject to access policy) and samplesheets for internal users.
+- Left nav is in-session recent history and can contain both projects and samplesheets.
+- Selecting a project shows that cohort's samples; selecting `All` shows accessible samples across projects.
+- Each sample row displays sample name and latest status.
 
 ## Internal access model
 
 - `public.user_profiles` stores per-user fields: `display_name`, `is_internal`.
 - Only users with `is_internal = true` can insert rows into `sample_status_updates`.
-- Status timeline modal endpoint is restricted to internal users.
+- Status timeline modal is visible to users with access to the sample's project; only internal users can submit updates.
 - For local testing, each user should create/update their own profile row after sign-in.
 
 Example SQL (run as admin):

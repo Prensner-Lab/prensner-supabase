@@ -72,6 +72,22 @@ export type SampleStatusTimelineRow = {
   updater_name: string | null;
 };
 
+export type DashboardProjectRow = {
+  id: string;
+  code: string;
+  title: string;
+  description: string | null;
+  sample_count: number;
+};
+
+export type DashboardSamplesheetRow = {
+  id: string;
+  project_title: string;
+  submitter_name: string | null;
+  date: string | null;
+  filename: string | null;
+};
+
 const url = Deno.env.get("SUPABASE_URL") || "";
 const key = Deno.env.get("SUPABASE_ANON_KEY") || "";
 
@@ -189,37 +205,125 @@ export function renderViewRow(row: RunRow) {
 }
 
 export function renderSamplesheetNavItem(row: SamplesheetRow) {
+  const path = `/get-samplesheet?id=${encodeURIComponent(row.id)}`;
   return `<li>
     <a
       href="#"
-      data-hx-get="/get-samplesheet?id=${esc(row.id)}"
+      data-hx-get="${path}"
       data-hx-target="#main-content"
       data-hx-swap="innerHTML"
+      data-recent-key="samplesheet:${esc(row.id)}"
+      data-recent-type="samplesheet"
+      data-recent-label="${esc(row.project_title)}"
+      data-recent-path="${path}"
     >${esc(row.project_title)}</a>
   </li>`;
 }
 
 export function renderProjectNavItem(row: ProjectRow) {
-  const projectCode = encodeURIComponent(row.code);
+  const projectId = encodeURIComponent(row.id);
+  const path = `/list-project-samples?project_id=${projectId}`;
   return `<li>
     <a
       href="#"
-      data-hx-get="/list-project-samples?project=${projectCode}"
+      data-hx-get="${path}"
       data-hx-target="#main-content"
       data-hx-swap="innerHTML"
+      data-recent-key="project:${esc(row.id)}"
+      data-recent-type="project"
+      data-recent-label="${esc(row.title)}"
+      data-recent-path="${path}"
     >${esc(row.title)}</a>
   </li>`;
 }
 
 export function renderAllSamplesNavItem() {
+  const path = "/list-project-samples?project_id=all";
   return `<li>
     <a
       href="#"
-      data-hx-get="/list-project-samples?project=all"
+      data-hx-get="${path}"
       data-hx-target="#main-content"
       data-hx-swap="innerHTML"
+      data-recent-key="project:all"
+      data-recent-type="project"
+      data-recent-label="All Samples"
+      data-recent-path="${path}"
     >All Samples</a>
   </li>`;
+}
+
+export function renderDashboardProjectCard(row: DashboardProjectRow) {
+  const path = `/list-project-samples?project_id=${encodeURIComponent(row.id)}`;
+  const sampleLabel = row.sample_count === 1 ? "sample" : "samples";
+
+  return `<article class="dashboard-card project-card">
+    <h3>${esc(row.title)}</h3>
+    <p class="card-code">${esc(row.code)}</p>
+    <p class="card-description">${esc(row.description || "No description")}</p>
+    <div class="card-footer">
+      <span>${esc(row.sample_count)} ${sampleLabel}</span>
+      <a
+        href="#"
+        class="card-link"
+        data-hx-get="${path}"
+        data-hx-target="#main-content"
+        data-hx-swap="innerHTML"
+        data-recent-key="project:${esc(row.id)}"
+        data-recent-type="project"
+        data-recent-label="${esc(row.title)}"
+        data-recent-path="${path}"
+      >Open project</a>
+    </div>
+  </article>`;
+}
+
+export function renderDashboardSamplesheetCard(row: DashboardSamplesheetRow) {
+  const path = `/get-samplesheet?id=${encodeURIComponent(row.id)}`;
+
+  return `<article class="dashboard-card samplesheet-card">
+    <h3>${esc(row.project_title)}</h3>
+    <p class="card-meta">Submitter: ${esc(row.submitter_name || "-")}</p>
+    <p class="card-meta">Date: ${esc(row.date || "-")}</p>
+    <p class="card-meta">File: ${esc(row.filename || "-")}</p>
+    <div class="card-footer">
+      <a
+        href="#"
+        class="card-link"
+        data-hx-get="${path}"
+        data-hx-target="#main-content"
+        data-hx-swap="innerHTML"
+        data-recent-key="samplesheet:${esc(row.id)}"
+        data-recent-type="samplesheet"
+        data-recent-label="${esc(row.project_title)}"
+        data-recent-path="${path}"
+      >Open samplesheet</a>
+    </div>
+  </article>`;
+}
+
+export function renderDashboardView(projectCardsHtml: string, samplesheetCardsHtml: string, internal: boolean) {
+  const projectsSection = `<section class="dashboard-section">
+    <div class="dashboard-headline">
+      <h2>Project Tracking</h2>
+    </div>
+    ${projectCardsHtml || "<p class=\"dashboard-empty\">No projects available yet.</p>"}
+  </section>`;
+
+  const samplesheetSection = internal
+    ? `<section class="dashboard-section">
+        <div class="dashboard-headline">
+          <h2>Samplesheets</h2>
+        </div>
+        ${samplesheetCardsHtml || "<p class=\"dashboard-empty\">No samplesheets available yet.</p>"}
+      </section>`
+    : "";
+
+  return `<div class="container dashboard-container">
+    <h1>Dashboard</h1>
+    ${projectsSection}
+    ${samplesheetSection}
+  </div>`;
 }
 
 export function renderProjectSampleItem(row: ProjectSampleLatestRow) {

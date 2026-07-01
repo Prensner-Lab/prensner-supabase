@@ -1,4 +1,11 @@
-import { handleOptions, html, renderSamplesheetNavItem, requireAuth, type SamplesheetRow } from "../_shared/lib.ts";
+import {
+  handleOptions,
+  html,
+  isInternalUser,
+  renderSamplesheetNavItem,
+  requireAuth,
+  type SamplesheetRow
+} from "../_shared/lib.ts";
 
 Deno.serve(async (req) => {
   const optionsResponse = handleOptions(req);
@@ -13,6 +20,11 @@ Deno.serve(async (req) => {
   const auth = await requireAuth(req);
   if (!auth.ok) {
     return auth.response;
+  }
+
+  const internal = await isInternalUser(auth.db);
+  if (!internal) {
+    return html("");
   }
 
   const { data, error } = await auth.db

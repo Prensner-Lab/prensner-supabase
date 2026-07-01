@@ -31,25 +31,26 @@
                 <button type="submit">Sign in</button>
             </form>
             <button id="logout-btn" type="button" class="secondary" hidden>Sign out</button>
+            <button id="dashboard-btn" type="button" class="secondary" hidden>Dashboard</button>
             <p id="auth-status">Sign in with your invited account.</p>
         </section>
-        <h2>Samplesheets</h2>
-        <ul
-          id="samplesheet-nav"
-          data-hx-get="/list-samplesheets"
-                    data-hx-trigger="refresh-samplesheets from:body"
-          data-hx-swap="innerHTML"
-        >
-        <li>Sign in to load samplesheets.</li>
-        </ul>
+        <section id="recent-section" hidden>
+            <h2>Recent</h2>
+            <ul id="recent-nav"></ul>
+        </section>
     </nav>
 
     <main id="main-content">
         <div class="container">
             <h1>Welcome to the lab!</h1>
-            <p>Select a samplesheet in the left nav to load metadata and entries.</p>
+            <p>Sign in to load your dashboard.</p>
         </div>
     </main>
+
+    <div id="status-modal" class="modal" hidden>
+      <div class="modal-backdrop" data-modal-close></div>
+      <div id="modal-content" class="modal-content"></div>
+    </div>
 
 </body>
 </html>

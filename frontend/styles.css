@@ -29,6 +29,12 @@ nav h2 {
     border-bottom: 1px solid #334155;
 }
 
+.nav-note {
+    font-size: 0.8rem;
+    color: #94a3b8;
+    margin-top: -12px;
+}
+
 .auth-panel {
     display: flex;
     flex-direction: column;
@@ -376,4 +382,99 @@ tr:hover {
     border-top: 1px solid #e2e8f0;
     padding-top: 12px;
     color: #475569;
+}
+
+.dashboard-container > p {
+    margin-bottom: 18px;
+    color: #475569;
+}
+
+.dashboard-section {
+    margin-top: 20px;
+}
+
+.dashboard-headline {
+    margin-bottom: 12px;
+}
+
+.dashboard-headline h2 {
+    margin-bottom: 4px;
+    font-size: 1.2rem;
+}
+
+.dashboard-headline p {
+    color: #64748b;
+    font-size: 0.9rem;
+}
+
+.dashboard-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
+    gap: 12px;
+}
+
+.dashboard-card {
+    border: 1px solid #e2e8f0;
+    border-radius: 12px;
+    padding: 14px;
+    background: linear-gradient(180deg, #ffffff 0%, #f8fafc 100%);
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
+.dashboard-card h3 {
+    font-size: 1rem;
+}
+
+.card-code {
+    color: #0369a1;
+    font-size: 0.82rem;
+    font-weight: 700;
+}
+
+.card-description,
+.card-meta {
+    color: #475569;
+    font-size: 0.9rem;
+}
+
+.card-footer {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 8px;
+    margin-top: 6px;
+}
+
+.card-link {
+    text-decoration: none;
+    color: #0f172a;
+    font-weight: 700;
+    padding: 6px 8px;
+    border-radius: 8px;
+    background: #dbeafe;
+}
+
+.card-link:hover {
+    background: #bfdbfe;
+}
+
+.dashboard-empty {
+    color: #64748b;
+    font-size: 0.9rem;
+}
+
+@media (max-width: 900px) {
+    body {
+        flex-direction: column;
+    }
+
+    nav {
+        width: 100%;
+    }
+
+    main {
+        padding: 20px;
+    }
 }
