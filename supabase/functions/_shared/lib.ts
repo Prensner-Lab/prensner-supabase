@@ -39,6 +39,39 @@ export type SamplesheetRow = {
   updated_at: string;
 };
 
+export type ProjectRow = {
+  id: string;
+  code: string;
+  title: string;
+  description: string | null;
+  created_by: string | null;
+  created_at: string;
+  updated_at: string;
+};
+
+export type ProjectSampleLatestRow = {
+  id: string;
+  project_id: string;
+  project_code: string;
+  project_title: string;
+  sample_name: string;
+  tissue_type: string | null;
+  library_type: string | null;
+  source: string | null;
+  latest_status: "not started" | "in progress" | "data generated" | "failed";
+  latest_status_at: string | null;
+};
+
+export type SampleStatusTimelineRow = {
+  id: string;
+  sample_id: string;
+  status: "not started" | "in progress" | "data generated" | "failed";
+  notes: string | null;
+  created_by: string | null;
+  created_at: string;
+  updater_name: string | null;
+};
+
 const url = Deno.env.get("SUPABASE_URL") || "";
 const key = Deno.env.get("SUPABASE_ANON_KEY") || "";
 
@@ -115,6 +148,14 @@ export async function requireAuth(req: Request): Promise<AuthResult> {
   return { ok: true, db, userId: data.user.id };
 }
 
+export async function isInternalUser(db: ReturnType<typeof createClient>): Promise<boolean> {
+  const { data, error } = await db.rpc("is_internal_user");
+  if (error) {
+    return false;
+  }
+  return data === true;
+}
+
 export function esc(value: unknown): string {
   const raw = value == null ? "" : String(value);
   return raw
@@ -131,6 +172,10 @@ function cell(v: unknown) {
 
 function toCssClass(dataType: string): string {
   return "dt-" + dataType.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "");
+}
+
+function statusCssClass(status: string): string {
+  return "status-" + status.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "");
 }
 
 export function renderViewRow(row: RunRow) {
@@ -152,6 +197,126 @@ export function renderSamplesheetNavItem(row: SamplesheetRow) {
       data-hx-swap="innerHTML"
     >${esc(row.project_title)}</a>
   </li>`;
+}
+
+export function renderProjectNavItem(row: ProjectRow) {
+  const projectCode = encodeURIComponent(row.code);
+  return `<li>
+    <a
+      href="#"
+      data-hx-get="/list-project-samples?project=${projectCode}"
+      data-hx-target="#main-content"
+      data-hx-swap="innerHTML"
+    >${esc(row.title)}</a>
+  </li>`;
+}
+
+export function renderAllSamplesNavItem() {
+  return `<li>
+    <a
+      href="#"
+      data-hx-get="/list-project-samples?project=all"
+      data-hx-target="#main-content"
+      data-hx-swap="innerHTML"
+    >All Samples</a>
+  </li>`;
+}
+
+export function renderProjectSampleItem(row: ProjectSampleLatestRow) {
+  const statusClass = statusCssClass(row.latest_status);
+  const statusHtml = `<button
+      type="button"
+      class="status-chip ${statusClass} status-trigger"
+      data-hx-get="/get-sample-status-modal?sample_id=${encodeURIComponent(row.id)}"
+      data-hx-target="#modal-content"
+      data-hx-swap="innerHTML"
+    >${esc(row.latest_status)}</button>`;
+
+  return `<tr>
+    <td>${esc(row.sample_name)}</td>
+    <td>${statusHtml}</td>
+    <td>${esc(row.tissue_type || "-")}</td>
+    <td>${esc(row.library_type || "-")}</td>
+    <td>${esc(row.source || "-")}</td>
+  </tr>`;
+}
+
+export function renderProjectSamplesView(title: string, rowsHtml: string, count: number) {
+  return `<div class="container">
+    <h1>${esc(title)}</h1>
+    <p>Showing ${esc(count)} sample${count === 1 ? "" : "s"}.</p>
+    <div class="table-responsive">
+      <table class="samples-table">
+        <thead>
+          <tr class="header">
+            <th>sample</th>
+            <th>latest status</th>
+            <th>tissue type</th>
+            <th>library type</th>
+            <th>source</th>
+          </tr>
+        </thead>
+        <tbody>${rowsHtml}</tbody>
+      </table>
+    </div>
+  </div>`;
+}
+
+function renderTimelineItem(row: SampleStatusTimelineRow) {
+  const statusClass = statusCssClass(row.status);
+  const updater = row.updater_name || row.created_by || "Unknown user";
+  const createdAt = new Date(row.created_at).toLocaleString();
+
+  return `<li class="timeline-item">
+    <div class="timeline-header">
+      <span class="status-chip ${statusClass}">${esc(row.status)}</span>
+      <span class="timeline-meta">${esc(updater)} • ${esc(createdAt)}</span>
+    </div>
+    <p class="timeline-notes">${esc(row.notes || "No notes")}</p>
+  </li>`;
+}
+
+export function renderSampleStatusModal(
+  sampleName: string,
+  sampleId: string,
+  timelineRows: SampleStatusTimelineRow[],
+  canEdit = false
+) {
+  const timelineHtml = timelineRows.length === 0
+    ? "<p class=\"timeline-empty\">No status updates yet.</p>"
+    : `<ul class="timeline-list">${timelineRows.map((row) => renderTimelineItem(row)).join("")}</ul>`;
+
+  const formHtml = canEdit
+    ? `<form
+        class="status-form"
+        data-hx-post="/add-sample-status-update"
+        data-hx-target="#modal-content"
+        data-hx-swap="innerHTML"
+      >
+        <input type="hidden" name="sample_id" value="${esc(sampleId)}" />
+        <label for="status-select">New status</label>
+        <select id="status-select" name="status" required>
+          <option value="not started">not started</option>
+          <option value="in progress">in progress</option>
+          <option value="data generated">data generated</option>
+          <option value="failed">failed</option>
+        </select>
+        <label for="status-notes">Notes</label>
+        <textarea id="status-notes" name="notes" rows="3" placeholder="Optional context"></textarea>
+        <button type="submit">Save update</button>
+      </form>`
+    : "<p class=\"status-readonly\">Read-only view. Internal users can add updates.</p>";
+
+  return `<section class="modal-sheet">
+    <header class="modal-header">
+      <h2>Status Timeline: ${esc(sampleName)}</h2>
+      <button type="button" class="modal-close" data-modal-close>Close</button>
+    </header>
+    <div class="modal-body">
+      ${timelineHtml}
+      ${formHtml}
+    </div>
+  </section>`;
 }
 
 function metaLine(label: string, value: unknown) {
