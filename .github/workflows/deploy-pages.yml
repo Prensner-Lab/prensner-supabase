@@ -26,22 +26,21 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
 
-      - name: Validate required variables
-        run: |
-          test -n "$SUPABASE_URL" || (echo "Missing repo variable SUPABASE_URL" && exit 1)
-          test -n "$SUPABASE_PUBLISHABLE_KEY" || (echo "Missing repo variable SUPABASE_PUBLISHABLE_KEY" && exit 1)
-
       - name: Build runtime config
         run: |
-          if [ -z "$FUNCTIONS_BASE" ]; then
-            FUNCTIONS_BASE="${SUPABASE_URL%/}/functions/v1"
-          fi
+          if [ -z "$SUPABASE_URL" ] || [ -z "$SUPABASE_PUBLISHABLE_KEY" ]; then
+            echo "::warning::SUPABASE_URL or SUPABASE_PUBLISHABLE_KEY repo variable is not set; deploying with default config.js"
+          else
+            if [ -z "$FUNCTIONS_BASE" ]; then
+              FUNCTIONS_BASE="${SUPABASE_URL%/}/functions/v1"
+            fi
 
-          cat > frontend/config.js <<EOF
-          window.FUNCTIONS_BASE = "${FUNCTIONS_BASE}";
-          window.SUPABASE_URL = "${SUPABASE_URL}";
-          window.SUPABASE_PUBLISHABLE_KEY = "${SUPABASE_PUBLISHABLE_KEY}";
-          EOF
+            cat > frontend/config.js <<EOF
+window.FUNCTIONS_BASE = "${FUNCTIONS_BASE}";
+window.SUPABASE_URL = "${SUPABASE_URL}";
+window.SUPABASE_PUBLISHABLE_KEY = "${SUPABASE_PUBLISHABLE_KEY}";
+EOF
+          fi
 
       - name: Configure Pages
         uses: actions/configure-pages@v5

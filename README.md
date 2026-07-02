@@ -112,7 +112,7 @@ Endpoints:
 
 Frontend hosting is automated by `.github/workflows/deploy-pages.yml`.
 
-Required repository variables:
+Repository variables (optional but required for a functional production deployment):
 
 - `SUPABASE_URL`: your cloud project URL, e.g. `https://<project-ref>.supabase.co`
 - `SUPABASE_PUBLISHABLE_KEY`: cloud anon/publishable key
@@ -120,7 +120,7 @@ Required repository variables:
 
 Workflow behavior:
 
-1. On push to `main`, build runtime `frontend/config.js` from repo variables.
+1. On push to `main`, build runtime `frontend/config.js` from repo variables (if both `SUPABASE_URL` and `SUPABASE_PUBLISHABLE_KEY` are set). If either is missing, the existing `frontend/config.js` defaults are used and a warning is emitted.
 2. Publish the `frontend/` directory to GitHub Pages.
 
 Necessary server configurations:
