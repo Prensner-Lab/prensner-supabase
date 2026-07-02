@@ -1,0 +1,56 @@
+name: Deploy Frontend to GitHub Pages
+
+on:
+  push:
+    branches:
+      - main
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+concurrency:
+  group: pages
+  cancel-in-progress: true
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    env:
+      SUPABASE_URL: ${{ vars.SUPABASE_URL }}
+      SUPABASE_PUBLISHABLE_KEY: ${{ vars.SUPABASE_PUBLISHABLE_KEY }}
+      FUNCTIONS_BASE: ${{ vars.FUNCTIONS_BASE }}
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Validate required variables
+        run: |
+          test -n "$SUPABASE_URL" || (echo "Missing repo variable SUPABASE_URL" && exit 1)
+          test -n "$SUPABASE_PUBLISHABLE_KEY" || (echo "Missing repo variable SUPABASE_PUBLISHABLE_KEY" && exit 1)
+
+      - name: Build runtime config
+        run: |
+          if [ -z "$FUNCTIONS_BASE" ]; then
+            FUNCTIONS_BASE="${SUPABASE_URL%/}/functions/v1"
+          fi
+
+          cat > frontend/config.js <<EOF
+          window.FUNCTIONS_BASE = "${FUNCTIONS_BASE}";
+          window.SUPABASE_URL = "${SUPABASE_URL}";
+          window.SUPABASE_PUBLISHABLE_KEY = "${SUPABASE_PUBLISHABLE_KEY}";
+          EOF
+
+      - name: Configure Pages
+        uses: actions/configure-pages@v5
+
+      - name: Upload artifact
+        uses: actions/upload-pages-artifact@v3
+        with:
+          path: frontend
+
+      - name: Deploy
+        id: deployment
+        uses: actions/deploy-pages@v4

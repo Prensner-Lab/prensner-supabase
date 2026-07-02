@@ -48,6 +48,8 @@ Project sample tracking fields:
 
 - `frontend/` static site (`index.html`, `styles.css`, `app.js`)
 - `supabase/migrations/` DB schema and RLS policy migrations
+- `supabase/migrations_legacy/` archived pre-baseline migration chain (kept for history)
+- `supabase/seed.sql` dev-only sample/demo data loaded by `supabase db reset`
 - `supabase/functions/` HTML fragment edge endpoints
 
 ## Database objects
@@ -66,6 +68,7 @@ Project sample tracking fields:
    - `supabase start`
 3. Apply migrations:
    - `supabase db reset`
+   - This applies `supabase/migrations/001_baseline.sql` and then loads `supabase/seed.sql`.
 4. Set edge function secrets:
    - `supabase secrets set SUPABASE_URL=http://127.0.0.1:54321 SUPABASE_ANON_KEY=<anon_key>`
 5. Serve static site from `frontend/` (example):
@@ -93,12 +96,41 @@ Endpoints:
 
 ## Production notes
 
+- Production schema is managed by the baseline migration only.
+- Demo/sample data is intentionally not stored in migration files, so `supabase db push` does not insert seed data.
+- Keep `supabase/seed.sql` for local/dev reset workflows only.
+- Before first production cutover, deploy to a separate dry-run Supabase project and validate auth + RLS behavior.
+
 - Auth model is invite-only using Supabase Auth. Self-signup is disabled.
 - Internal users can read all projects, samples, and samplesheets.
 - External users are read-only and can see only granted projects and their samples.
 - Samplesheets are internal-only. External samplesheet list requests return empty results and samplesheet detail requests return 404.
 - Status updates remain internal-only for writes.
 - Keep function responses as `text/html` for HTMX compatibility.
+
+## GitHub Pages deployment
+
+Frontend hosting is automated by `.github/workflows/deploy-pages.yml`.
+
+Required repository variables:
+
+- `SUPABASE_URL`: your cloud project URL, e.g. `https://<project-ref>.supabase.co`
+- `SUPABASE_PUBLISHABLE_KEY`: cloud anon/publishable key
+- `FUNCTIONS_BASE` (optional): override edge base URL. If omitted, workflow uses `${SUPABASE_URL}/functions/v1`.
+
+Workflow behavior:
+
+1. On push to `main`, build runtime `frontend/config.js` from repo variables.
+2. Publish the `frontend/` directory to GitHub Pages.
+
+Necessary server configurations:
+
+- Enable GitHub Pages source as GitHub Actions in repository settings.
+- Add `https://prensner-lab.github.io` to allowed origins/CORS in Supabase.
+
+To run a gated rollout: create a backup, run `supabase db push --dry-run`, then apply `supabase db push`.
+
+For a full first-deploy checklist (dry-run and production), see `DEPLOYMENT.md`.
 
 ## Unified dashboard behavior
 
