@@ -9,7 +9,6 @@
   let recentItems = [];
   let accessToken = "";
   let client = null;
-  let dashboardLoaded = false;
 
   function expand(path) {
     if (!path || /^https?:\/\//.test(path)) {
@@ -73,15 +72,10 @@
       .replaceAll("'", "&#39;");
   }
 
-  function loadDashboard(force) {
+  function loadDashboard() {
     if (!window.htmx) {
       return;
     }
-    if (!force && dashboardLoaded) {
-      return;
-    }
-
-    dashboardLoaded = true;
     window.htmx.ajax("GET", expand("/get-dashboard"), {
       target: "#main-content",
       swap: "innerHTML"
@@ -184,7 +178,6 @@
       logout.hidden = true;
       dashboardBtn.hidden = true;
       recentSection.hidden = true;
-      dashboardLoaded = false;
       setStatus("Contact the Prensner lab to be invited to make an account.");
       recentItems = [];
       const recentNav = document.getElementById("recent-nav");
@@ -228,7 +221,6 @@
 
     accessToken = data.session?.access_token || "";
     updateAuthUi(data.user || null);
-    loadDashboard(true);
   }
 
   async function restoreSession() {
@@ -238,9 +230,6 @@
     const { data } = await client.auth.getSession();
     accessToken = data.session?.access_token || "";
     updateAuthUi(data.session?.user || null);
-    if (data.session?.user) {
-      loadDashboard(true);
-    }
   }
 
   document.addEventListener("DOMContentLoaded", function () {
@@ -343,17 +332,14 @@
     const dashboardBtn = document.getElementById("dashboard-btn");
     if (dashboardBtn) {
       dashboardBtn.addEventListener("click", function () {
-        loadDashboard(true);
+        loadDashboard();
       });
     }
 
     if (client) {
-      client.auth.onAuthStateChange(function (eventName, session) {
+      client.auth.onAuthStateChange(function (_eventName, session) {
         accessToken = session?.access_token || "";
         updateAuthUi(session?.user || null);
-        if (eventName === "SIGNED_IN" && session?.user) {
-          loadDashboard(true);
-        }
       });
     }
 
